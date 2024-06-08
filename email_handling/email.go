@@ -5,15 +5,20 @@ import (
     "encoding/base64"
     "fmt"
     "log"
+    "mime"
     "mime/multipart"
     "net/smtp"
     "net/http"
     "os"
     "path/filepath"
+    "regexp"
     "strings"
     "time"
 
     "github.com/joho/godotenv"
+    "github.com/emersion/go-message/charset"
+    "github.com/emersion/go-imap/v2/imapclient"
+    "github.com/emersion/go-imap/v2"
 )
 
 type message struct {
@@ -56,6 +61,7 @@ func (m *message) build() []byte {
 
     // Create a new multipart writer and set the boundary
 	writer := multipart.NewWriter(buf)
+    defer writer.Close()
 	boundary := writer.Boundary()
     
     // If we have attachments, set the content type to multipart/mixed
@@ -83,9 +89,6 @@ func (m *message) build() []byte {
 			buf.Write(b)
 			buf.WriteString(fmt.Sprintf("\n--%s", boundary))
 		}
-        
-        // Close the writer
-        writer.Close()
 	}
 
 	return buf.Bytes()
@@ -100,7 +103,7 @@ func SendEmail(recipients []string, attachmentPath string, fullName string, ) {
 
     today := time.Now()
 
-    auth := smtp.PlainAuth("", os.Getenv("gmail_address"), os.Getenv("gmail_password"), "smtp.gmail.com")
+    auth := smtp.PlainAuth("", os.Getenv("sender_address"), os.Getenv("sender_password"), "smtp.gmail.com")
     m := new(message)
     m.To = recipients
     m.Subject = fullName + " Student Loan Repayment " + today.Format("2006-01-02")
@@ -111,9 +114,66 @@ func SendEmail(recipients []string, attachmentPath string, fullName string, ) {
     
     msg := m.build()
 
-    err = smtp.SendMail("smtp.gmail.com:587", auth, os.Getenv("gmail_address"), m.To, msg)
+    err = smtp.SendMail("smtp.gmail.com:587", auth, os.Getenv("sender_address"), m.To, msg)
     if err != nil {
         log.Fatal(err)
     }
+}
 
+func GetMFACode() string {
+    options := &imapclient.Options{
+        WordDecoder: &mime.WordDecoder{CharsetReader: charset.Reader},
+    }
+    client, err := imapclient.DialTLS("imap.gmail.com:993", options)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer client.Close()
+
+    log.Print("Connected")
+    
+    // Login
+    client.Login(os.Getenv("mfa_email_address"), os.Getenv("mfa_email_password")).Wait()
+    defer client.Logout()
+    log.Print("Logged in")
+
+    // Select inbox
+    opt := &imap.SelectOptions{ReadOnly: true}
+    client.Select("INBOX", opt).Wait()
+    log.Print("Selected inbox")
+
+    // Search for email
+    headerSearch := []imap.SearchCriteriaHeaderField{}
+    headerSearch = append(headerSearch, imap.SearchCriteriaHeaderField{Key: "SUBJECT", Value: "Your authentication code"})
+    // the Since only evaluates the date, not the time. So time.Now() means just today
+    searchCriteria := imap.SearchCriteria{Since: time.Now(), Header: headerSearch}
+    dat, err := client.Search(&searchCriteria, &imap.SearchOptions{ReturnAll: true}).Wait()
+    log.Print(dat.All)
+
+    bodySectionList :=[]*imap.FetchItemBodySection{
+            {Specifier: imap.PartSpecifierText},
+        }
+
+    // fetch the auth email
+    fetchOptions := imap.FetchOptions{
+        Flags: true, 
+        Envelope: true, 
+        BodySection: bodySectionList,
+    }
+    messages, err := client.Fetch(dat.All, &fetchOptions).Collect()
+    if err != nil {
+        log.Fatal("Could not fetch given seq")
+    }
+
+    var msg string
+    for _, v := range messages[len(messages)-1].BodySection{
+        msg = string(v[:])
+        break
+    }
+
+    re, _ := regexp.Compile("[0-9]{6}</p>")
+    match := re.Find([]byte(msg))
+    matchStr := string(match[:])
+
+    return strings.Replace(matchStr, "</p>", "", -1)
 }

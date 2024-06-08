@@ -1,14 +1,14 @@
-# Path to a firefox profile that nelnet recognizes
-# This is used to bypass the 2FA
-firefox_profile="/path/to/profile/root"
-
 # This file contains all the environment variables that are used in the project
 nelnet_username="username"
 nelnet_password="password"
 
 # The email address and password that will be used to send the email
-gmail_address="email@email.com"
-gmail_password="app_password"
+sender_address="email@email.com"
+sender_password="app_password"
+
+# MFA-receiving email address and password
+mfa_email_address="email@email.com"
+mfa_email_password="app_password"
 
 # Full name to fill the email subject
 full_name="Full Name"
