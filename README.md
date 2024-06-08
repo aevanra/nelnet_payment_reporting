@@ -16,7 +16,7 @@ Application can be called by running the binary `main` directly.
 5. Set the firefox_profile env var to the path of the profile you just created
 6. Set the rest of the env vars in the .env file to your desired values
     - for your work email password, you will need an application password from gmail -- https://knowledge.workspace.google.com/kb/how-to-create-app-passwords-000009237 
-7. Test this with your own email address before sending it to HR automatically.
+7. Test this with your own email address before sending it to anyone automatically.
 8. Set up a cron job to run this every month.
 
 ### MAJOR ANNOYANCE ###
