@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/playwright-community/playwright-go"
+    "github.com/aevanra/expenses_automation/email_handling"
 )
 
 func GetMostRecentPaymentScreenshot(outputPath string) error {
@@ -26,20 +27,20 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
     } 
 
     // Browser Config
-    browserConfig := playwright.BrowserTypeLaunchPersistentContextOptions{Headless: &headless, 
-        RecordHarMode: playwright.HarModeFull, 
-        Screen: &playwright.Size{Width: 2560, Height: 1440},
-    }
+    browserConfig := playwright.BrowserTypeLaunchOptions{Headless: &headless}
 
     // Start Browser
-    browser, err := pw.Firefox.LaunchPersistentContext(os.Getenv("firefox_profile"), browserConfig)
+    browser, err := pw.Firefox.Launch(browserConfig)
     defer browser.Close()
     if err != nil {
         log.Fatalf("Could not start browser: %v", err)
     }
 
     // Get the open page
-    page := browser.Pages()[0]
+    page, err := browser.NewPage()
+    if err != nil {
+        log.Fatalf("Could not open page: %v", err)
+    }
 
     // Navigate to Nelnet Login Page
     _, err = page.Goto("https://nelnet.studentaid.gov/dashboard", playwright.PageGotoOptions{
@@ -59,10 +60,18 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
     time.Sleep(1*time.Second) // Not sleeping caused issues
     page.GetByText("Continue").Click()
 
+    page.GetByText("Send Code").Click()
+
+    time.Sleep(3 * time.Minute) // Wait for code to be sent
+    mfaCode := email.GetMFACode()
+    log.Print(mfaCode)
+
+    page.Locator("[id='code-textfield']").Fill(mfaCode)
+    // page.GetByText("Verify").Click()
 
     // Hold browser open for 5 minutes if needed
     if !headless && os.Getenv("hold_browser_open") == "true" {
-        log.Println("Holding browser open for 5 minutes")
+        log.Println("Holding browser open for 10 minutes")
         time.Sleep(10*time.Minute)
         return errors.New("Held browser open for maintenance, exiting now.")
     }
@@ -78,6 +87,8 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
     if err != nil {
         log.Fatalf("Could not take screenshot: %v", err)
     }
+
+    
 
     return nil
 }

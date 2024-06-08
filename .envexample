@@ -1,7 +1,3 @@
-# Path to a firefox profile that nelnet recognizes
-# This is used to bypass the 2FA
-firefox_profile="/path/to/profile/root"
-
 # This file contains all the environment variables that are used in the project
 nelnet_username="username"
 nelnet_password="password"
