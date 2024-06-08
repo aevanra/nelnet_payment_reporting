@@ -166,7 +166,7 @@ func GetMFACode() string {
     }
 
     var msg string
-    for _, v := range messages[0].BodySection{
+    for _, v := range messages[len(messages)-1].BodySection{
         msg = string(v[:])
         break
     }
