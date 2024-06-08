@@ -11,7 +11,7 @@ import (
 )
 
 func GetMostRecentPaymentScreenshot(outputPath string) error {
-    headless := os.Getenv("headless") == "true"
+    headless := os.Getenv("run_playwright_headless") == "true"
     if os.Getenv("install") == "true" {
         // Install playwright
         playwright.Install()
@@ -67,7 +67,7 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
     log.Print(mfaCode)
 
     page.Locator("[id='code-textfield']").Fill(mfaCode)
-    // page.GetByText("Verify").Click()
+    page.GetByText("Verify").Click()
 
     // Hold browser open for 5 minutes if needed
     if !headless && os.Getenv("hold_browser_open") == "true" {
