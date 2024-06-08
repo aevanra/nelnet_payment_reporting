@@ -1,0 +1,35 @@
+# Path to a firefox profile that nelnet recognizes
+# This is used to bypass the 2FA
+firefox_profile="/path/to/profile/root"
+
+# This file contains all the environment variables that are used in the project
+nelnet_username="username"
+nelnet_password="password"
+
+# The email address and password that will be used to send the email
+gmail_address="email@email.com"
+gmail_password="app_password"
+
+# Full name to fill the email subject
+full_name="Full Name"
+
+# Comma separated list of email recipients as a single string with no spaces
+email_recipients="email@email.com,email/hr@email.com"
+
+# The directory where the images will be saved
+# Dir without trailing /
+output_dir="/path/to/dir"
+
+# Whether to run the playwright tests in headless mode
+run_playwright_headless="false"
+
+# Whether to hold Firefox open for auth
+# Useful for debugging and authenticating your 2fa
+# Only works if run_playwright_headless is set to false
+hold_browser_open="true"
+
+# Run playwright.Install()
+install="true"
+
+# Whether to send email or not -- used for debugging
+send_email="true"
