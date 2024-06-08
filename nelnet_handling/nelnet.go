@@ -33,6 +33,7 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
 
     // Start Browser
     browser, err := pw.Firefox.LaunchPersistentContext(os.Getenv("firefox_profile"), browserConfig)
+    defer browser.Close()
     if err != nil {
         log.Fatalf("Could not start browser: %v", err)
     }
