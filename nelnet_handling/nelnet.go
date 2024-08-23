@@ -51,7 +51,8 @@ func GetMostRecentPaymentScreenshot(outputPath string) error {
     }
     // There are annoying pages to get through
     page.Locator("[id='login-button']").Click()
-    page.Locator("[id='user-name-button']").Click()
+    page.Locator("[id='continue-button']").Click()
+    page.Locator("[id='accept-disclaimer']").Click()
 
     // Login
     time.Sleep(1*time.Second) // Not sleeping caused issues
